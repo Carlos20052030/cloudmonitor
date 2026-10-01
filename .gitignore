@@ -1,3 +1,25 @@
-_caderno/
+# Binaries
+bin/
+*.exe
+
+# Databases
+*.db
+*.db-journal
+
+# Local config
+config.yaml
+.env
+
+# Python leftovers
 venv/
 __pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Personal notes
+_caderno/
