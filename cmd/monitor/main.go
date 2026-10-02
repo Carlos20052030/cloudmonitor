@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/Carlos20052030/cloudmonitor/internal/checker"
 	"github.com/Carlos20052030/cloudmonitor/internal/config"
+	"github.com/Carlos20052030/cloudmonitor/internal/domain"
 )
 
 func main() {
@@ -14,10 +17,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("interval: %ds\n", cfg.CheckIntervalSeconds)
-	fmt.Printf("timeout: %ds\n", cfg.RequestTimeoutSeconds)
-	fmt.Printf("targets: %d\n", len(cfg.Targets))
-	for _, t := range cfg.Targets {
-		fmt.Printf("  - %s: %s\n", t.Name, t.URL)
+	timeout := time.Duration(cfg.RequestTimeoutSeconds) * time.Second
+
+	for _, target := range cfg.Targets {
+        result := checker.Check(domain.Target{Name: target.Name, URL: target.URL}, timeout)
+		fmt.Printf("URL: %s\n", result.URL)
+		fmt.Printf("Status: %s\n", result.Status)
+		if result.Error != "" {
+			fmt.Printf("Error: %s\n", result.Error)
+		} else {
+			fmt.Printf("HTTP: %d\n", result.StatusCode)
+		}
+		fmt.Printf("Latency: %dms\n", result.LatencyMS)
+		fmt.Println("---")
 	}
 }
