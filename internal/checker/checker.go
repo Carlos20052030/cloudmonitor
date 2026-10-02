@@ -62,3 +62,22 @@ func (c *Checker) Check(ctx context.Context, target domain.Target) domain.Result
 		CheckedAt:  time.Now(),
 	}
 }
+
+// CheckAll runs all checks concurrently, one goroutine per target.
+// The results channel is buffered so no goroutine blocks waiting for a reader.
+func (c *Checker) CheckAll(ctx context.Context, targets []domain.Target) []domain.Result {
+	results := make(chan domain.Result, len(targets))
+
+	for _, t := range targets {
+		go func(t domain.Target) {
+			results <- c.Check(ctx, t)
+		}(t)
+	}
+
+	out := make([]domain.Result, 0, len(targets))
+	for range targets {
+		out = append(out, <-results)
+	}
+
+	return out
+}

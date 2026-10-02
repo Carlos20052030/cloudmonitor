@@ -25,8 +25,12 @@ func main() {
 
 	c := checker.New(time.Duration(cfg.RequestTimeoutSeconds) * time.Second)
 
-	for _, t := range targets {
-		r := c.Check(context.Background(), t)
-		fmt.Printf("%-10s %-5s HTTP %d %dms\n", r.TargetName, r.Status, r.StatusCode, r.LatencyMS)
+	start := time.Now()
+	results := c.CheckAll(context.Background(), targets)
+	elapsed := time.Since(start)
+
+	for _, r := range results {
+		fmt.Printf("%-25s %-5s HTTP %d %dms\n", r.TargetName, r.Status, r.StatusCode, r.LatencyMS)
 	}
+	fmt.Printf("\ntotal: %dms (parallel)\n", elapsed.Milliseconds())
 }
