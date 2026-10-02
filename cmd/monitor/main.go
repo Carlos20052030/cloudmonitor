@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -17,18 +18,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	timeout := time.Duration(cfg.RequestTimeoutSeconds) * time.Second
+	targets := make([]domain.Target, 0, len(cfg.Targets))
+	for _, t := range cfg.Targets {
+		targets = append(targets, domain.Target{Name: t.Name, URL: t.URL})
+	}
 
-	for _, target := range cfg.Targets {
-        result := checker.Check(domain.Target{Name: target.Name, URL: target.URL}, timeout)
-		fmt.Printf("URL: %s\n", result.URL)
-		fmt.Printf("Status: %s\n", result.Status)
-		if result.Error != "" {
-			fmt.Printf("Error: %s\n", result.Error)
-		} else {
-			fmt.Printf("HTTP: %d\n", result.StatusCode)
-		}
-		fmt.Printf("Latency: %dms\n", result.LatencyMS)
-		fmt.Println("---")
+	c := checker.New(time.Duration(cfg.RequestTimeoutSeconds) * time.Second)
+
+	for _, t := range targets {
+		r := c.Check(context.Background(), t)
+		fmt.Printf("%-10s %-5s HTTP %d %dms\n", r.TargetName, r.Status, r.StatusCode, r.LatencyMS)
 	}
 }
