@@ -1,0 +1,13 @@
+check_interval_seconds: 30
+request_timeout_seconds: 5
+
+telegram:
+  enabled: false
+  bot_token: "REPLACE_ME"
+  chat_id: "REPLACE_ME"
+
+targets:
+  - name: "Example"
+    url: "https://example.com"
+  - name: "Google"
+    url: "https://google.com"
