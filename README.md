@@ -1,6 +1,3 @@
-Aqui está o `README.md` completo, honesto e pronto para colar. Ele reflete **só o que existe hoje** no projeto.
-
-```markdown
 # CloudMonitor
 
 A small Go service that checks HTTP endpoints on a schedule and
@@ -100,26 +97,4 @@ docs/               scope, architecture, roadmap
 MIT
 ```
 
----
-
-### O que tem de diferente de outros READMEs que você viu
-
-1. **Nada de SQLite, Telegram, Makefile, graceful shutdown** como se já existissem. Só estão listados em "Next".
-2. **O bloco `## Status`** diz claramente o que está implementado.
-3. **O `## Configuration`** tem um aviso honesto: os campos `check_interval_seconds` e `telegram` são placeholders e ainda não fazem nada. Isso evita que alguém configure e se frustre.
-4. **Quick Start real** — só `go run ./cmd/monitor`. Sem `make run`, porque o Makefile ainda não existe.
-
----
-
-### Depois de colar
-
-Faz o commit da documentação toda:
-
-```bash
-gofmt -w cmd/monitor/main.go internal/checker/checker.go internal/config/config.go internal/domain/result.go internal/checker/checker_test.go
-git status --short
-git add .
-git commit -m "docs: complete README, scope, architecture, and roadmap"
-git push
-```
 
