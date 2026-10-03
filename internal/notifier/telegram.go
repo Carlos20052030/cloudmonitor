@@ -9,12 +9,32 @@ import (
 	"github.com/Carlos20052030/cloudmonitor/internal/domain"
 )
 
+// antiSpam keeps the last known status per URL and decides
+// whether a new notification should be sent.
+type antiSpam struct {
+	last map[string]domain.Status
+}
+
+func newAntiSpam() *antiSpam {
+	return &antiSpam{last: make(map[string]domain.Status)}
+}
+
+// shouldNotify returns true if the status differs from the last one
+// recorded for that URL. On the first sight of a URL, it always returns true.
+func (a *antiSpam) shouldNotify(url string, status domain.Status) bool {
+	previous, seen := a.last[url]
+	if seen && previous == status {
+		return false
+	}
+	a.last[url] = status
+	return true
+}
+
 // Telegram sends messages to a chat when a target changes state.
-// It keeps the last known state per URL in memory to avoid spam.
 type Telegram struct {
-	bot       *tgbotapi.BotAPI
-	chatID    int64
-	lastState map[string]domain.Status
+	bot      *tgbotapi.BotAPI
+	chatID   int64
+	antiSpam *antiSpam
 }
 
 func NewTelegram(token string, chatID int64) (*Telegram, error) {
@@ -24,20 +44,16 @@ func NewTelegram(token string, chatID int64) (*Telegram, error) {
 	}
 
 	return &Telegram{
-		bot:       bot,
-		chatID:    chatID,
-		lastState: make(map[string]domain.Status),
+		bot:      bot,
+		chatID:   chatID,
+		antiSpam: newAntiSpam(),
 	}, nil
 }
 
-// Notify sends a message only when the status differs from the last
-// known one for that URL. On the first check of each URL, it always sends.
 func (t *Telegram) Notify(r domain.Result) {
-	last, seen := t.lastState[r.URL]
-	if seen && last == r.Status {
+	if !t.antiSpam.shouldNotify(r.URL, r.Status) {
 		return
 	}
-	t.lastState[r.URL] = r.Status
 
 	var msg string
 	if r.Status == domain.StatusDOWN {
