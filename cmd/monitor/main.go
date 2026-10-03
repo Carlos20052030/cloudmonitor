@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/Carlos20052030/cloudmonitor/internal/checker"
 	"github.com/Carlos20052030/cloudmonitor/internal/config"
 	"github.com/Carlos20052030/cloudmonitor/internal/domain"
+	"github.com/Carlos20052030/cloudmonitor/internal/scheduler"
 	"github.com/Carlos20052030/cloudmonitor/internal/storage"
 )
 
@@ -20,15 +23,17 @@ type Store interface {
 }
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
+
 	cfg, err := config.Load("config.yaml")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "config:", err)
+		slog.Error("config", "err", err)
 		os.Exit(1)
 	}
 
 	store, err := storage.New("cloudmonitor.db")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "storage:", err)
+		slog.Error("storage", "err", err)
 		os.Exit(1)
 	}
 	defer store.Close()
@@ -40,14 +45,25 @@ func main() {
 
 	c := checker.New(time.Duration(cfg.RequestTimeoutSeconds) * time.Second)
 
-	ctx := context.Background()
-	results := c.CheckAll(ctx, targets)
-
-	for _, r := range results {
-		if err := store.Save(ctx, r); err != nil {
-			fmt.Fprintln(os.Stderr, "save:", err)
-			continue
+	onResult := func(r domain.Result) {
+		slog.Info("check",
+			"target", r.TargetName,
+			"status", r.Status,
+			"status_code", r.StatusCode,
+			"latency_ms", r.LatencyMS,
+		)
+		if err := store.Save(context.Background(), r); err != nil {
+			slog.Error("save", "err", err)
 		}
-		fmt.Printf("%-25s %-5s HTTP %d %dms\n", r.TargetName, r.Status, r.StatusCode, r.LatencyMS)
 	}
+
+	interval := time.Duration(cfg.CheckIntervalSeconds) * time.Second
+	sched := scheduler.New(c, interval, targets, onResult)
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	slog.Info("monitor starting", "targets", len(targets), "interval", interval)
+	sched.Run(ctx)
+	slog.Info("monitor stopped")
 }
