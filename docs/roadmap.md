@@ -1,4 +1,4 @@
-# Roadmap — Uptime Monitor V1
+# Roadmap — CloudMonitor V1
 
 Build plan for V1. Four weeks, one commit per day, four phases.
 
@@ -34,9 +34,9 @@ one log line per target.
 
 **Goal:** every check is stored in SQLite.
 
-**Deliverable:** the monitor writes to `uptime.db` and history is queryable.
+**Deliverable:** the monitor writes to `cloudmonitor.db` and history is queryable.
 
-**Done when:** `sqlite3 uptime.db "SELECT * FROM checks"` returns rows from
+**Done when:** `sqlite3 cloudmonitor.db "SELECT * FROM checks"` returns rows from
 the last run.
 
 | Day | Task                                                                 |

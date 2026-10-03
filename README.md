@@ -1,32 +1,32 @@
-# Uptime Monitor
+Aqui está o `README.md` completo, honesto e pronto para colar. Ele reflete **só o que existe hoje** no projeto.
 
-A small Go service that checks HTTP endpoints on a schedule, stores every
-result in SQLite, and alerts a Telegram chat when a target changes state
-(UP → DOWN or DOWN → UP).
+```markdown
+# CloudMonitor
 
-Built as a learning project with production habits: clean package layout,
-dependency injection, graceful shutdown, structured logs, and tests.
+A small Go service that checks HTTP endpoints on a schedule and
+reports their status.
 
-## Features
+Built as a learning project with production habits: clean package
+layout, dependency injection, and tests.
 
-- Parallel HTTP checks using goroutines
-- Configurable check interval and request timeout
-- SQLite persistence with indexed history
-- Telegram alerts on state transitions (no spam)
-- Graceful shutdown on SIGINT / SIGTERM
-- Structured logging with `log/slog`
-- Zero CGO, single static binary
+## Status
 
-## Stack
+V1 — in development. See [docs/roadmap.md](./docs/roadmap.md) for the
+current phase.
 
-- Go 1.22+
-- `net/http` (standard library)
-- `database/sql` + `modernc.org/sqlite`
-- `log/slog` (standard library)
-- `gopkg.in/yaml.v3`
-- Telegram Bot API
+**Implemented:**
 
-No web framework. No ORM. Standard library first.
+- Parallel HTTP checks with goroutines
+- Configurable timeout via YAML
+- UP/DOWN classification and latency measurement
+- Unit tests for the checker using `httptest`
+
+**Next:**
+
+- SQLite persistence
+- Telegram alerts on state transitions
+- Scheduler with fixed interval
+- Graceful shutdown
 
 ## Quick Start
 
@@ -37,23 +37,21 @@ No web framework. No ORM. Standard library first.
    cd cloudmonitor
    ```
 
-2. Copy the example configuration and edit it:
+2. Copy the example configuration:
 
    ```bash
    cp config.example.yaml config.yaml
    ```
 
-   Fill in your Telegram `bot_token` and `chat_id`, and list the URLs you
-   want to monitor.
+3. Edit `config.yaml` and list the URLs you want to monitor.
 
-3. Run it:
+4. Run it:
 
    ```bash
-   make run
+   go run ./cmd/monitor
    ```
 
-   You should see one log line per check in the terminal, and a Telegram
-   message when a target changes state.
+You should see one line per target, with status, HTTP code, and latency.
 
 ## Configuration
 
@@ -64,7 +62,7 @@ check_interval_seconds: 30
 request_timeout_seconds: 5
 
 telegram:
-  enabled: true
+  enabled: false
   bot_token: "REPLACE_ME"
   chat_id: "REPLACE_ME"
 
@@ -78,38 +76,24 @@ targets:
 See `config.example.yaml` for a template. The real `config.yaml` is
 gitignored.
 
-## Make Targets
-
-| Target       | Action                                  |
-| ------------ | --------------------------------------- |
-| `make run`   | Run the monitor locally                 |
-| `make build` | Build the binary into `bin/monitor`     |
-| `make test`  | Run all tests                           |
-| `make lint`  | Run `golangci-lint`                     |
-| `make tidy`  | Tidy `go.mod` / `go.sum`                |
+`check_interval_seconds` and the `telegram` block are placeholders for
+features not yet implemented in V1. They are parsed and ignored today.
 
 ## Project Layout
 
 ```
-cmd/monitor/        entry point and dependency wiring
+cmd/monitor/        entry point
 internal/domain/    shared types (Target, Result, Status)
 internal/config/    YAML config loader
 internal/checker/   HTTP checks with goroutines
-internal/storage/   SQLite persistence
-internal/notifier/  Telegram alerts
-internal/scheduler/ periodic check runner
-migrations/         SQL migrations
+docs/               scope, architecture, roadmap
 ```
 
 ## Documentation
 
-- [scope.md](./scope.md) — what the project does and does not do (V1)
-- [architecture.md](./architecture.md) — how it is built
-- [roadmap.md](./roadmap.md) — build plan, milestones, and risks
-
-## Status
-
-V1 — in development. See [roadmap.md](./roadmap.md) for the current phase.
+- [docs/scope.md](./docs/scope.md) — what the project does and does not do (V1)
+- [docs/architecture.md](./docs/architecture.md) — target architecture for V1
+- [docs/roadmap.md](./docs/roadmap.md) — build plan and milestones
 
 ## License
 
@@ -117,3 +101,25 @@ MIT
 ```
 
 ---
+
+### O que tem de diferente de outros READMEs que você viu
+
+1. **Nada de SQLite, Telegram, Makefile, graceful shutdown** como se já existissem. Só estão listados em "Next".
+2. **O bloco `## Status`** diz claramente o que está implementado.
+3. **O `## Configuration`** tem um aviso honesto: os campos `check_interval_seconds` e `telegram` são placeholders e ainda não fazem nada. Isso evita que alguém configure e se frustre.
+4. **Quick Start real** — só `go run ./cmd/monitor`. Sem `make run`, porque o Makefile ainda não existe.
+
+---
+
+### Depois de colar
+
+Faz o commit da documentação toda:
+
+```bash
+gofmt -w cmd/monitor/main.go internal/checker/checker.go internal/config/config.go internal/domain/result.go internal/checker/checker_test.go
+git status --short
+git add .
+git commit -m "docs: complete README, scope, architecture, and roadmap"
+git push
+```
+

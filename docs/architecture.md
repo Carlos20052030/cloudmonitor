@@ -1,8 +1,12 @@
-# Architecture — Uptime Monitor V1
+> **Note:** This document describes the **target architecture for V1**.
+> For what is currently implemented, see the **Status** section in
+> [README.md](../README.md).
+
+# Architecture — CloudMonitor V1
 
 ## 1. Overview
 
-Uptime Monitor is a long-running service that periodically checks a set of
+CloudMonitor is a long-running service that periodically checks a set of
 HTTP targets, records the outcome of each check, and notifies a Telegram
 chat when a target changes state (UP → DOWN or DOWN → UP).
 
@@ -31,7 +35,7 @@ process on a small VPS under systemd.
  │    storage    │           │   notifier    │
  │   (SQLite)    │           │  (Telegram)   │
  └───────────────┘           └───────────────┘
-````
+```
 
 ## 2. Design Principles
 
@@ -123,7 +127,7 @@ This is the Go idiom.
 1. `cmd/monitor/main.go` starts.
 2. `config.Load("config.yaml")` reads and parses the YAML file into
    `config.Config`.
-3. `storage.New("uptime.db")` opens the SQLite database and runs migrations.
+3. `storage.New("cloudmonitor.db")` opens the SQLite database and runs migrations.
 4. If `config.Telegram.Enabled` is true, `notifier.NewTelegram(...)` is
    created.
 5. `checker.New(timeout)` is created with the configured request timeout.
@@ -144,7 +148,7 @@ This is the Go idiom.
 
 ## 7. Storage Schema
 
-SQLite file: `uptime.db`
+SQLite file: `cloudmonitor.db`
 
 ```sql
 CREATE TABLE IF NOT EXISTS checks (
@@ -276,7 +280,7 @@ always emit a notification, which is acceptable for V1.
 ## 16. Directory Layout
 
 ```text
-uptime-monitor/
+cloudmonitor/
 ├── cmd/
 │   └── monitor/
 │       └── main.go
@@ -306,9 +310,10 @@ uptime-monitor/
 ├── go.mod
 ├── go.sum
 ├── Makefile
-├── scope.md
-├── architecture.md
-├── roadmap.md
+├── docs/
+│   ├── architecture.md
+│   ├── scope.md
+│   └── roadmap.md
 └── README.md
 ```
 
@@ -344,27 +349,27 @@ Steps:
 2. Copy the binary, `config.yaml`, and `migrations/` to:
 
    ```text
-   /opt/uptime-monitor/
+   /opt/cloudmonitor/
    ```
 
 3. Create a systemd unit at:
 
    ```text
-   /etc/systemd/system/uptime-monitor.service
+   /etc/systemd/system/cloudmonitor.service
    ```
 
    ```ini
    [Unit]
-   Description=Uptime Monitor
+   Description=CloudMonitor
    After=network-online.target
 
    [Service]
    Type=simple
-   WorkingDirectory=/opt/uptime-monitor
-   ExecStart=/opt/uptime-monitor/bin/monitor
+   WorkingDirectory=/opt/cloudmonitor
+   ExecStart=/opt/cloudmonitor/bin/monitor
    Restart=on-failure
    RestartSec=5
-   User=uptime
+   User=cloudmonitor
 
    [Install]
    WantedBy=multi-user.target
@@ -373,13 +378,13 @@ Steps:
 4. Enable and start the service:
 
    ```bash
-   systemctl daemon-reload && systemctl enable --now uptime-monitor
+   systemctl daemon-reload && systemctl enable --now cloudmonitor
    ```
 
 5. Verify:
 
    ```bash
-   journalctl -u uptime-monitor -f
+   journalctl -u cloudmonitor -f
    ```
 
 ## 19. Non-Goals for V1
@@ -397,9 +402,7 @@ These are explicitly out of scope in V1. See `scope.md`.
 * Linux (or any OS with a Go toolchain for local development).
 * Go 1.22+ for building.
 * ~1 vCPU and ~50 MB RAM for the running binary.
-* A writable directory for `uptime.db` and `config.yaml`.
+* A writable directory for `cloudmonitor.db` and `config.yaml`.
 * Outbound HTTPS access to monitored targets and to `api.telegram.org`.
 * Estimated cost on a small VPS: ~$5/month (Hetzner CX22, Fly.io free tier,
   or similar).
-
----

@@ -1,4 +1,4 @@
-# Scope — Uptime Monitor V1
+# Scope — CloudMonitor V1
 
 This document defines what V1 does and, more importantly, what V1 does not do.
 Scope is the contract that prevents the project from growing forever.
