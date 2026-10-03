@@ -2,14 +2,15 @@ package storage
 
 import (
 	"database/sql"
-	"os"
+
+	"github.com/Carlos20052030/cloudmonitor/migrations"
 )
 
-// migrate reads the SQL migration file and executes it against the database.
-// Idempotent: uses CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS,
-// so running it multiple times is safe.
+// migrate applies the initial schema to the database.
+// The SQL is embedded in the binary, so it works regardless of the
+// process working directory.
 func migrate(db *sql.DB) error {
-	data, err := os.ReadFile("migrations/001_init.sql")
+	data, err := migrations.FS.ReadFile("001_init.sql")
 	if err != nil {
 		return err
 	}

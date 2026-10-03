@@ -21,5 +21,11 @@ __pycache__/
 # OS
 .DS_Store
 
+# IDE
+.idea/
+
 # Personal notes
 _caderno/
+
+# Accidental redirects
+/embed
