@@ -12,6 +12,13 @@ import (
 	"github.com/Carlos20052030/cloudmonitor/internal/storage"
 )
 
+// Store is the contract used by main. The concrete *storage.Store
+// satisfies it implicitly — Go does not require "implements".
+type Store interface {
+	Save(ctx context.Context, r domain.Result) error
+	Close() error
+}
+
 func main() {
 	cfg, err := config.Load("config.yaml")
 	if err != nil {
