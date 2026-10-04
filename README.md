@@ -31,9 +31,7 @@ current phase.
 
 **Next:**
 
-- `Makefile` with `run`, `build`, `test`, `lint`, `tidy`
 - Deployment under systemd on a Linux VPS
-- `golangci-lint` clean run
 
 ## Quick Start
 
@@ -63,12 +61,14 @@ Results are saved to `cloudmonitor.db`.
 
 ## Demo
 
+![Telegram alert demo](./docs/demo.gif)
+
 ```
 time=2026-10-04T07:38:46-03:00 level=INFO msg="telegram enabled" chat_id=123456789
 time=2026-10-04T07:38:46-03:00 level=INFO msg="monitor starting" targets=3 interval=30s
 time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Example" status=UP status_code=200 latency_ms=238
 time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Google" status=UP status_code=200 latency_ms=519
-time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Site Que Não Existe" status=DOWN status_code=0 latency_ms=206
+time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Nonexistent Site" status=DOWN status_code=0 latency_ms=206
 ^C
 time=2026-10-04T07:39:00-03:00 level=INFO msg="monitor stopped"
 ```
@@ -76,7 +76,7 @@ time=2026-10-04T07:39:00-03:00 level=INFO msg="monitor stopped"
 When a target changes state, a Telegram message is sent:
 
 ```
-🔴 DOWN: Site Que Não Existe
+🔴 DOWN: Nonexistent Site
 URL: https://site-que-nao-existe-12345.com
 Error: dial tcp: lookup site-que-nao-existe-12345.com: no such host
 ```
