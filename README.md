@@ -14,16 +14,20 @@ current phase.
 **Implemented:**
 
 - Parallel HTTP checks with goroutines
-- Configurable timeout via YAML
+- Configurable check interval and request timeout via YAML
 - UP/DOWN classification and latency measurement
-- Unit tests for the checker using `httptest`
+- SQLite persistence with indexed history
+- Telegram alerts only on state transitions (no spam)
+- Scheduler with fixed interval
+- Graceful shutdown on SIGINT / SIGTERM
+- Structured logging with `log/slog`
+- Unit tests for checker, storage, notifier, and scheduler
 
 **Next:**
 
-- SQLite persistence
-- Telegram alerts on state transitions
-- Scheduler with fixed interval
-- Graceful shutdown
+- `Makefile` with `run`, `build`, `test`, `lint`, `tidy`
+- Deployment under systemd on a Linux VPS
+- `golangci-lint` clean run
 
 ## Quick Start
 
@@ -48,7 +52,8 @@ current phase.
    go run ./cmd/monitor
    ```
 
-You should see one line per target, with status, HTTP code, and latency.
+You should see one log line per target, with status, HTTP code, and latency.
+Results are saved to `cloudmonitor.db`.
 
 ## Configuration
 
@@ -73,16 +78,44 @@ targets:
 See `config.example.yaml` for a template. The real `config.yaml` is
 gitignored.
 
-`check_interval_seconds` and the `telegram` block are placeholders for
-features not yet implemented in V1. They are parsed and ignored today.
+## Telegram Setup
+
+Telegram alerts are optional. To enable them:
+
+1. Open Telegram and talk to [@BotFather](https://t.me/BotFather).
+2. Send `/newbot` and follow the prompts to create a bot.
+3. Copy the token BotFather gives you.
+4. Open a chat with your new bot and send `/start`. This is required —
+   the bot cannot message you until you message it first.
+5. Open `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser.
+6. Find the `chat.id` field in the JSON response. It looks like `123456789`.
+7. Edit `config.yaml`:
+
+   ```yaml
+   telegram:
+     enabled: true
+     bot_token: "YOUR_TOKEN"
+     chat_id: "123456789"
+   ```
+
+8. Run `go run ./cmd/monitor`. You should receive one message per target
+   on the first check, and one message only when a target changes state.
+
+**Security:** never commit `config.yaml`. It contains your bot token and
+is already covered by `.gitignore`. If a token leaks, revoke it in
+BotFather and generate a new one.
 
 ## Project Layout
 
 ```
-cmd/monitor/        entry point
+cmd/monitor/        entry point and dependency wiring
 internal/domain/    shared types (Target, Result, Status)
 internal/config/    YAML config loader
 internal/checker/   HTTP checks with goroutines
+internal/storage/   SQLite persistence
+internal/scheduler/ periodic check runner
+internal/notifier/  Telegram alerts with anti-spam
+migrations/         SQL schema, embedded via //go:embed
 docs/               scope, architecture, roadmap
 ```
 
@@ -95,6 +128,3 @@ docs/               scope, architecture, roadmap
 ## License
 
 MIT
-```
-
-
