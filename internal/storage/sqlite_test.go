@@ -13,7 +13,7 @@ func TestSave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open store: %v", err)
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 
 	r := domain.Result{
 		TargetName: "example",
@@ -42,7 +42,7 @@ func TestSave_DOWN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open store: %v", err)
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 
 	r := domain.Result{
 		TargetName: "broken",
@@ -74,7 +74,7 @@ func TestRecentChecks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open store: %v", err)
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 
 	now := time.Now()
 	for i := 0; i < 5; i++ {

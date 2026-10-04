@@ -46,7 +46,7 @@ func (c *Checker) Check(ctx context.Context, target domain.Target) domain.Result
 			LatencyMS:  latency,
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	status := domain.StatusDOWN
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {

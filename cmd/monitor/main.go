@@ -38,7 +38,11 @@ func main() {
 		slog.Error("storage", "err", err)
 		os.Exit(1)
 	}
-	defer store.Close()
+	defer func() {
+		if err := store.Close(); err != nil {
+			slog.Error("store close", "err", err)
+		}
+	}()
 
 	// Notifier is optional. Only created when Telegram is enabled in config.
 	var tg notifier.Notifier

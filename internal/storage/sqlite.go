@@ -64,7 +64,7 @@ func (s *Store) RecentChecks(ctx context.Context, targetName string, n int) ([]C
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var out []CheckRecord
 	for rows.Next() {
