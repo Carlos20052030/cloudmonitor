@@ -5,12 +5,14 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/Carlos20052030/cloudmonitor/internal/checker"
 	"github.com/Carlos20052030/cloudmonitor/internal/config"
 	"github.com/Carlos20052030/cloudmonitor/internal/domain"
+	"github.com/Carlos20052030/cloudmonitor/internal/notifier"
 	"github.com/Carlos20052030/cloudmonitor/internal/scheduler"
 	"github.com/Carlos20052030/cloudmonitor/internal/storage"
 )
@@ -38,6 +40,25 @@ func main() {
 	}
 	defer store.Close()
 
+	// Notifier is optional. Only created when Telegram is enabled in config.
+	var tg notifier.Notifier
+	if cfg.Telegram.Enabled {
+		chatID, err := strconv.ParseInt(cfg.Telegram.ChatID, 10, 64)
+		if err != nil {
+			slog.Error("telegram chat_id invalid", "err", err)
+			os.Exit(1)
+		}
+		t, err := notifier.NewTelegram(cfg.Telegram.BotToken, chatID)
+		if err != nil {
+			slog.Error("telegram", "err", err)
+			os.Exit(1)
+		}
+		tg = t
+		slog.Info("telegram enabled", "chat_id", chatID)
+	} else {
+		slog.Info("telegram disabled")
+	}
+
 	targets := make([]domain.Target, 0, len(cfg.Targets))
 	for _, t := range cfg.Targets {
 		targets = append(targets, domain.Target{Name: t.Name, URL: t.URL})
@@ -54,6 +75,9 @@ func main() {
 		)
 		if err := store.Save(context.Background(), r); err != nil {
 			slog.Error("save", "err", err)
+		}
+		if tg != nil {
+			tg.Notify(r)
 		}
 	}
 
