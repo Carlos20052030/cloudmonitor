@@ -1,5 +1,11 @@
 # CloudMonitor
 
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#)
+[![Lint](https://img.shields.io/badge/golangci--lint-clean-brightgreen)](#)
+[![Status](https://img.shields.io/badge/status-V1-yellow)](./docs/roadmap.md)
+
 A small Go service that checks HTTP endpoints on a schedule and
 reports their status.
 
@@ -54,6 +60,32 @@ current phase.
 
 You should see one log line per target, with status, HTTP code, and latency.
 Results are saved to `cloudmonitor.db`.
+
+## Demo
+
+```
+time=2026-10-04T07:38:46-03:00 level=INFO msg="telegram enabled" chat_id=123456789
+time=2026-10-04T07:38:46-03:00 level=INFO msg="monitor starting" targets=3 interval=30s
+time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Example" status=UP status_code=200 latency_ms=238
+time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Google" status=UP status_code=200 latency_ms=519
+time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Site Que Não Existe" status=DOWN status_code=0 latency_ms=206
+^C
+time=2026-10-04T07:39:00-03:00 level=INFO msg="monitor stopped"
+```
+
+When a target changes state, a Telegram message is sent:
+
+```
+🔴 DOWN: Site Que Não Existe
+URL: https://site-que-nao-existe-12345.com
+Error: dial tcp: lookup site-que-nao-existe-12345.com: no such host
+```
+
+```
+🟢 UP: Example
+URL: https://example.com
+Latency: 238ms
+```
 
 ## Configuration
 
