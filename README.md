@@ -156,6 +156,8 @@ docs/               scope, architecture, roadmap
 - [docs/scope.md](./docs/scope.md) — what the project does and does not do (V1)
 - [docs/architecture.md](./docs/architecture.md) — target architecture for V1
 - [docs/roadmap.md](./docs/roadmap.md) — build plan and milestones
+- [docs/deployment.md](./docs/deployment.md) — how to deploy on a VPS
+- [docs/postmortem.md](./docs/postmortem.md) — retrospective on building V1
 
 ## License
 
