@@ -2,6 +2,7 @@ package checker
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -13,8 +14,31 @@ type Checker struct {
 }
 
 func New(timeout time.Duration) *Checker {
+	dialer := &net.Dialer{
+		Timeout:   5 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	transport := &http.Transport{
+		// Force IPv4: some European datacenters have intermittent IPv6
+		// routes to specific CDN ASNs (Google, Cloudflare) that manifest
+		// as connection resets on some checks. "tcp4" pins the dial to
+		// IPv4, where the route is stable.
+		DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+			return dialer.DialContext(ctx, "tcp4", addr)
+		},
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          10,
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
 	return &Checker{
-		client: &http.Client{Timeout: timeout},
+		client: &http.Client{
+			Timeout:   timeout,
+			Transport: transport,
+		},
 	}
 }
 
