@@ -1,104 +1,58 @@
 # CloudMonitor
 
-[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
-[![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#)
-[![Lint](https://img.shields.io/badge/golangci--lint-clean-brightgreen)](#)
-[![Status](https://img.shields.io/badge/status-V1-yellow)](./docs/roadmap.md)
+![Go Version](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-live-brightgreen)
 
-A small Go service that checks HTTP endpoints on a schedule and
-reports their status.
+**A production-ready uptime monitor for HTTP endpoints, built with Go.**
 
-Built as a learning project with production habits: clean package
-layout, dependency injection, and tests.
+## The Problem
 
-## Status
+Downtime is expensive. You need to know the second your service goes offline, but you also don't want to be spammed with alerts every 30 seconds just because a network blip happened.
 
-V1 — in development. See [docs/roadmap.md](./docs/roadmap.md) for the
-current phase.
+CloudMonitor solves this. It checks your endpoints on a schedule in parallel, measures latency, stores the history in SQLite, and sends a Telegram alert **only when the state changes** (from UP to DOWN, or DOWN to UP).
 
-**Implemented:**
+It runs 24/7 on a Linux VPS with zero external dependencies.
 
-- Parallel HTTP checks with goroutines
-- Configurable check interval and request timeout via YAML
-- UP/DOWN classification and latency measurement
-- SQLite persistence with indexed history
-- Telegram alerts only on state transitions (no spam)
-- Scheduler with fixed interval
-- Graceful shutdown on SIGINT / SIGTERM
-- Structured logging with `log/slog`
-- Unit tests for checker, storage, notifier, and scheduler
+## Features
 
-**Next:**
+- **Parallel HTTP Checks:** Built with goroutines for speed and efficiency.
+- **Smart Alerting:** Telegram notifications are sent *only* on state transitions (anti-spam).
+- **Persistent History:** SQLite storage with indexed queries for uptime history and latency tracking.
+- **Zero Framework:** Pure standard library `net/http`, `database/sql`, and `log/slog`.
+- **Graceful Shutdown:** In-flight checks finish before the process exits (handles `SIGINT`/`SIGTERM`).
+- **Deployable:** Designed to run under `systemd` on a Linux VPS.
 
-- Deployment under systemd on a Linux VPS
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Language | Go 1.27 |
+| HTTP | `net/http` (stdlib) |
+| Database | SQLite (`modernc.org/sqlite`) |
+| Logging | `log/slog` (structured) |
+| Migrations | Embedded `.sql` files (`//go:embed`) |
 
 ## Quick Start
 
-1. Clone the repository:
+### Prerequisites
+- Go 1.27+
 
-   ```bash
-   git clone https://github.com/Carlos20052030/cloudmonitor.git
-   cd cloudmonitor
-   ```
-
-2. Copy the example configuration:
-
-   ```bash
-   cp config.example.yaml config.yaml
-   ```
-
-3. Edit `config.yaml` and list the URLs you want to monitor.
-
-4. Run it:
-
-   ```bash
-   go run ./cmd/monitor
-   ```
-
-You should see one log line per target, with status, HTTP code, and latency.
-Results are saved to `cloudmonitor.db`.
-
-## Demo
-
-![Telegram alert demo](./docs/demo.gif)
-
-```
-time=2026-10-04T07:38:46-03:00 level=INFO msg="telegram enabled" chat_id=123456789
-time=2026-10-04T07:38:46-03:00 level=INFO msg="monitor starting" targets=3 interval=30s
-time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Example" status=UP status_code=200 latency_ms=238
-time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Google" status=UP status_code=200 latency_ms=519
-time=2026-10-04T07:38:46-03:00 level=INFO msg=check target="Nonexistent Site" status=DOWN status_code=0 latency_ms=206
-^C
-time=2026-10-04T07:39:00-03:00 level=INFO msg="monitor stopped"
+### 1. Clone and Configure
+```bash
+git clone https://github.com/Carlos20052030/cloudmonitor.git
+cd cloudmonitor
+cp config.example.yaml config.yaml
 ```
 
-When a target changes state, a Telegram message is sent:
-
-```
-🔴 DOWN: Nonexistent Site
-URL: https://site-que-nao-existe-12345.com
-Error: dial tcp: lookup site-que-nao-existe-12345.com: no such host
-```
-
-```
-🟢 UP: Example
-URL: https://example.com
-Latency: 238ms
-```
-
-## Configuration
-
-`config.yaml` controls everything:
-
+### 2. Edit the Config
+List the URLs you want to monitor in `config.yaml`:
 ```yaml
 check_interval_seconds: 30
 request_timeout_seconds: 5
 
 telegram:
-  enabled: false
-  bot_token: "REPLACE_ME"
-  chat_id: "REPLACE_ME"
+  enabled: false # Change to true if you set up a bot
 
 targets:
   - name: "Example"
@@ -107,22 +61,22 @@ targets:
     url: "https://google.com"
 ```
 
-See `config.example.yaml` for a template. The real `config.yaml` is
-gitignored.
+### 3. Run it
+```bash
+go run ./cmd/monitor
+```
+You will see one log line per target, with status, HTTP code, and latency. Results are saved to `cloudmonitor.db`.
 
 ## Telegram Setup
 
-Telegram alerts are optional. To enable them:
+To receive alerts, you need a Telegram bot:
 
 1. Open Telegram and talk to [@BotFather](https://t.me/BotFather).
-2. Send `/newbot` and follow the prompts to create a bot.
+2. Send `/newbot` and follow the prompts.
 3. Copy the token BotFather gives you.
-4. Open a chat with your new bot and send `/start`. This is required —
-   the bot cannot message you until you message it first.
-5. Open `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser.
-6. Find the `chat.id` field in the JSON response. It looks like `123456789`.
-7. Edit `config.yaml`:
-
+4. Open a chat with your new bot and send `/start`.
+5. Access `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a browser to find your `chat.id`.
+6. Update `config.yaml`:
    ```yaml
    telegram:
      enabled: true
@@ -130,16 +84,9 @@ Telegram alerts are optional. To enable them:
      chat_id: "123456789"
    ```
 
-8. Run `go run ./cmd/monitor`. You should receive one message per target
-   on the first check, and one message only when a target changes state.
-
-**Security:** never commit `config.yaml`. It contains your bot token and
-is already covered by `.gitignore`. If a token leaks, revoke it in
-BotFather and generate a new one.
-
 ## Project Layout
 
-```
+```text
 cmd/monitor/        entry point and dependency wiring
 internal/domain/    shared types (Target, Result, Status)
 internal/config/    YAML config loader
@@ -148,17 +95,17 @@ internal/storage/   SQLite persistence
 internal/scheduler/ periodic check runner
 internal/notifier/  Telegram alerts with anti-spam
 migrations/         SQL schema, embedded via //go:embed
-docs/               scope, architecture, roadmap
+docs/               scope, architecture, roadmap, postmortem
 ```
 
 ## Documentation
 
-- [docs/scope.md](./docs/scope.md) — what the project does and does not do (V1)
-- [docs/architecture.md](./docs/architecture.md) — target architecture for V1
-- [docs/roadmap.md](./docs/roadmap.md) — build plan and milestones
-- [docs/deployment.md](./docs/deployment.md) — how to deploy on a VPS
+- [docs/scope.md](./docs/scope.md) — problem, decisions, success criteria
+- [docs/architecture.md](./docs/architecture.md) — architecture and concurrency model
+- [docs/deployment.md](./docs/deployment.md) — how to deploy on a VPS with systemd
 - [docs/postmortem.md](./docs/postmortem.md) — retrospective on building V1
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+```
