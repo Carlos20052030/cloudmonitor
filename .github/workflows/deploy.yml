@@ -16,7 +16,11 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /home/carlos/cloudmonitor
+            # Install Go if not present
+            if ! command -v go &> /dev/null; then
+              sudo apt-get update && sudo apt-get install -y golang-go
+            fi
+            cd /home/carlos/cloudmonitor-app
             git pull origin main
-            go build -o /home/carlos/cloudmonitor/bin/monitor ./cmd/monitor
+            go build -o /home/carlos/cloudmonitor-app/bin/monitor ./cmd/monitor
             sudo systemctl restart cloudmonitor
