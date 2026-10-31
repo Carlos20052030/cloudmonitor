@@ -49,6 +49,19 @@ jobs:
             go build -o /home/carlos/cloudmonitor-app/bin/monitor ./cmd/monitor
             sudo systemctl restart cloudmonitor
 
+      - name: Deploy setup-sudoers script to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Copy setup-sudoers script to VPS
+            mkdir -p /home/carlos/scripts
+            cp /home/carlos/cloudmonitor-app/scripts/setup-sudoers.sh /home/carlos/scripts/setup-sudoers.sh
+            chmod +x /home/carlos/scripts/setup-sudoers.sh
+            echo "setup-sudoers.sh deployed. Run manually on VPS with: sudo /home/carlos/scripts/setup-sudoers.sh"
+
       - name: Deploy auto-heal script and setup cron
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -60,10 +73,6 @@ jobs:
             mkdir -p /home/carlos/scripts
             cp /home/carlos/cloudmonitor-app/scripts/auto-heal.sh /home/carlos/scripts/auto-heal.sh
             chmod +x /home/carlos/scripts/auto-heal.sh
-
-            # Add sudoers rule for docker (allow carlos to run docker without password)
-            echo "carlos ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/local/bin/docker, /usr/bin/docker-compose, /usr/local/bin/docker-compose, /usr/bin/docker compose, /usr/local/bin/docker compose" | sudo tee /etc/sudoers.d/carlos-docker > /dev/null
-            sudo chmod 440 /etc/sudoers.d/carlos-docker
 
             # Setup cron job for auto-heal (every 2 minutes)
             # Use crontab for user 'carlos'
