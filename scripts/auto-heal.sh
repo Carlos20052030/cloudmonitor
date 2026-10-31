@@ -10,13 +10,18 @@ export PATH=$PATH:/usr/bin:/usr/local/bin:/usr/sbin
 
 # Load environment variables from cloudmonitor .env file
 if [[ -f /home/carlos/cloudmonitor-app/.env ]]; then
-    export $(grep -v '^#' /home/carlos/cloudmonitor-app/.env | xargs)
+    set -a
+    source /home/carlos/cloudmonitor-app/.env
+    set +a
 fi
 
 # Configuration
 LOG_FILE="/home/carlos/scripts/auto-heal.log"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
+
+# Debug: log if Telegram vars are loaded (without exposing values)
+log_message "DEBUG" "Telegram vars loaded: BOT_TOKEN=${TELEGRAM_BOT_TOKEN:+yes}, CHAT_ID=${TELEGRAM_CHAT_ID:+yes}"
 
 # Container configurations: name -> working directory
 declare -A CONTAINERS=(
