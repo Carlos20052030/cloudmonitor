@@ -48,3 +48,24 @@ jobs:
             git pull origin main
             go build -o /home/carlos/cloudmonitor-app/bin/monitor ./cmd/monitor
             sudo systemctl restart cloudmonitor
+
+      - name: Deploy auto-heal script and setup cron
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Copy auto-heal script to VPS
+            mkdir -p /home/carlos/scripts
+            cat > /home/carlos/scripts/auto-heal.sh << 'EOF'
+$(cat scripts/auto-heal.sh)
+EOF
+            chmod +x /home/carlos/scripts/auto-heal.sh
+
+            # Setup cron job for auto-heal (every 2 minutes)
+            # Use crontab for user 'carlos'
+            (crontab -l 2>/dev/null | grep -v "auto-heal.sh"; echo "*/2 * * * * /home/carlos/scripts/auto-heal.sh") | crontab -
+
+            # Verify cron was added
+            crontab -l | grep auto-heal.sh
