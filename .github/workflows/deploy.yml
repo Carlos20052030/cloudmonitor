@@ -56,11 +56,9 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Copy auto-heal script to VPS
+            # Copy auto-heal script from project to scripts directory
             mkdir -p /home/carlos/scripts
-            cat > /home/carlos/scripts/auto-heal.sh << 'EOF'
-$(cat scripts/auto-heal.sh)
-EOF
+            cp /home/carlos/cloudmonitor-app/scripts/auto-heal.sh /home/carlos/scripts/auto-heal.sh
             chmod +x /home/carlos/scripts/auto-heal.sh
 
             # Setup cron job for auto-heal (every 2 minutes)
