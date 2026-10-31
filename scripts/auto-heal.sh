@@ -8,6 +8,11 @@ set -euo pipefail
 # Fix PATH for cron execution
 export PATH=$PATH:/usr/bin:/usr/local/bin:/usr/sbin
 
+# Load environment variables from cloudmonitor .env file
+if [[ -f /home/carlos/cloudmonitor-app/.env ]]; then
+    export $(grep -v '^#' /home/carlos/cloudmonitor-app/.env | xargs)
+fi
+
 # Configuration
 LOG_FILE="/home/carlos/scripts/auto-heal.log"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
