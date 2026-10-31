@@ -5,8 +5,11 @@
 
 set -euo pipefail
 
+# Fix PATH for cron execution
+export PATH=$PATH:/usr/bin:/usr/local/bin:/usr/sbin
+
 # Configuration
-LOG_FILE="/var/log/nuntix-auto-heal.log"
+LOG_FILE="/home/carlos/scripts/auto-heal.log"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
@@ -51,7 +54,7 @@ send_telegram_notification() {
 is_container_running() {
     local container_name="$1"
     local status
-    status=$(docker inspect --format="{{.State.Running}}" "$container_name" 2>/dev/null || echo "false")
+    status=$(sudo docker inspect --format="{{.State.Running}}" "$container_name" 2>/dev/null || echo "false")
     [[ "$status" == "true" ]]
 }
 
@@ -68,7 +71,7 @@ restart_container() {
     fi
 
     cd "$work_dir"
-    if docker compose up -d; then
+    if sudo docker compose up -d; then
         log_message "INFO" "Successfully restarted $container_name"
         return 0
     else

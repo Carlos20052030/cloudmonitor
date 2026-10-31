@@ -61,6 +61,10 @@ jobs:
             cp /home/carlos/cloudmonitor-app/scripts/auto-heal.sh /home/carlos/scripts/auto-heal.sh
             chmod +x /home/carlos/scripts/auto-heal.sh
 
+            # Add sudoers rule for docker (allow carlos to run docker without password)
+            echo "carlos ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/local/bin/docker, /usr/bin/docker-compose, /usr/local/bin/docker-compose, /usr/bin/docker compose, /usr/local/bin/docker compose" | sudo tee /etc/sudoers.d/carlos-docker > /dev/null
+            sudo chmod 440 /etc/sudoers.d/carlos-docker
+
             # Setup cron job for auto-heal (every 2 minutes)
             # Use crontab for user 'carlos'
             (crontab -l 2>/dev/null | grep -v "auto-heal.sh"; echo "*/2 * * * * /home/carlos/scripts/auto-heal.sh") | crontab -
