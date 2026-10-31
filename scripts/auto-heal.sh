@@ -8,17 +8,13 @@ set -euo pipefail
 # Fix PATH for cron execution
 export PATH=$PATH:/usr/bin:/usr/local/bin:/usr/sbin
 
-# Load environment variables from cloudmonitor .env file
-if [[ -f /home/carlos/cloudmonitor-app/.env ]]; then
-    set -a
-    source /home/carlos/cloudmonitor-app/.env
-    set +a
-fi
-
 # Configuration
 LOG_FILE="/home/carlos/scripts/auto-heal.log"
-TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
-TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
+
+# Extract Telegram credentials from config.yaml
+CONFIG_FILE="/home/carlos/cloudmonitor-app/config.yaml"
+export TELEGRAM_BOT_TOKEN=$(grep -i 'bot_token' $CONFIG_FILE | awk -F': ' '{print $2}' | tr -d '"' | xargs)
+export TELEGRAM_CHAT_ID=$(grep -i 'chat_id' $CONFIG_FILE | awk -F': ' '{print $2}' | tr -d '"' | xargs)
 
 # Debug: log if Telegram vars are loaded (without exposing values)
 log_message "DEBUG" "Telegram vars loaded: BOT_TOKEN=${TELEGRAM_BOT_TOKEN:+yes}, CHAT_ID=${TELEGRAM_CHAT_ID:+yes}"
