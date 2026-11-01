@@ -3,8 +3,7 @@ request_timeout_seconds: 5
 
 telegram:
   enabled: false
-  bot_token: "REPLACE_ME"
-  chat_id: "REPLACE_ME"
+  # The bot token and chat ID must be set in the .env file (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
 targets:
   - name: "Example"
